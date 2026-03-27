@@ -19,21 +19,27 @@ bun dev
 
 This starts both servers concurrently:
 - **API**: http://localhost:8787
-- **App**: Expo dev server (press `i` for iOS, `a` for Android, `w` for web)
+- **App**: Expo dev server with QR code for Expo Go
 
-## Individual Package Commands
+## Preview
+
+1. **Web**: Open the web preview URL in browser
+2. **Mobile**: Scan QR code with [Expo Go](https://expo.dev/go) app on your phone
+
+## Commands
 
 ```bash
-# Mobile app
-cd packages/app
-bun run start         # Start Expo dev server
-bun run ios           # Run on iOS simulator
-bun run android       # Run on Android emulator
-bun run web           # Run in browser
-
-# API
-cd packages/api
-bun run dev           # Start dev server
-bun run build         # Build for production
-bun run deploy        # Deploy to Cloudflare Workers
+bun dev          # Start both app and API
+bun dev --api    # API only
+bun dev --app    # App only  
+bun build        # Build both (verify no errors)
 ```
+
+## Deployment
+
+```bash
+# Deploy API to Cloudflare Workers
+cd packages/api && bun run deploy
+```
+
+For app store builds, use [EAS Build](https://docs.expo.dev/build/introduction/).
