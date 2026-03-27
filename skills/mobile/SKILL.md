@@ -66,7 +66,7 @@ The sandbox provides two ways for users to preview the app:
 1. **Web Preview**: Automatic browser preview at the sandbox URL
 2. **Expo Go**: Users can scan the QR code with the Expo Go app on their phone to test on a real device
 
-The Expo dev server runs with `--tunnel` mode, making the QR code work from anywhere.
+The Expo dev server provides a QR code for testing on physical devices with Expo Go.
 
 ## API Integration
 

@@ -4,7 +4,7 @@
   "main": "index.ts",
   "private": true,
   "scripts": {
-    "start": "expo start --tunnel",
+    "start": "expo start",
     "web": "expo start --web",
     "export": "expo export --platform web"
   },
