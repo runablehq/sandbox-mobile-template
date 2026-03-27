@@ -1,0 +1,10 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sandbox-mobile-api",
+  "compatibility_date": "2025-03-27",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./src/index.ts",
+  "observability": {
+    "enabled": true
+  }
+}
