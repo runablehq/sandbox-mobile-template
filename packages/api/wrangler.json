@@ -6,5 +6,13 @@
   "main": "./src/index.ts",
   "observability": {
     "enabled": true
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "sandbox-mobile-api",
+      "database_id": "REPLACE_WITH_REAL_D1_DATABASE_ID",
+      "migrations_dir": "src/database/migrations"
+    }
+  ]
 }

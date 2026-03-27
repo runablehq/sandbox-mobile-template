@@ -25,9 +25,17 @@ Do not start implementation until the user approves or adjusts the plan.
 1. Run preflight.
 2. Read this project's `README.md` for structure reference.
 3. Write `design.md` in the project root with the design direction from preflight (fonts, colors, spacing, style). See [design guidelines](./design.md). This file guides all UI code for consistency.
-4. Build screens, components, API routes.
-5. Verify with `bun build` to ensure no errors.
-6. Call `deliver` with `type: mobile-app`, project folder path at index 0.
+4. Load any relevant feature reference from `./references/` before implementing specialized capabilities.
+5. Build screens, components, API routes.
+6. Verify with `bun build` to ensure no errors.
+7. Call `deliver` with `type: mobile-app`, project folder path at index 0.
+
+## Feature References
+
+Load these only when the task needs them:
+
+- [authentication.md](./references/authentication.md): Better Auth setup for Expo mobile clients with a Cloudflare Workers backend.
+- [email.md](./references/email.md): Transactional email from the Cloudflare Workers backend that serves the mobile app.
 
 ## Project Structure
 
