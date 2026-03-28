@@ -4,16 +4,15 @@ We use [Better Auth](https://www.better-auth.com) for authentication.
 
 Reference docs: [Expo Integration](https://better-auth.com/docs/integrations/expo)
 
-## Preflight
-
+<preflight>
 Before wiring, state your assumptions about which auth methods are needed (email/password, OAuth, magic link), which screens should be protected, where users land after sign-in, and whether sign-in/sign-up are separate screens or a single combined flow. The user will correct what's wrong.
+</preflight>
 
-## Design Thinking
-
+<design_thinking>
 Auth screens are the first impression for returning users. They should feel native to the mobile app, not like web forms dropped into React Native. Error states, loading states, keyboard handling, and deep-link return flows matter as much as the happy path.
+</design_thinking>
 
 ## 1. Authentication Config
-
 This uses the same Drizzle + D1 shape as the website template.
 
 Create `packages/api/src/auth.ts`:
@@ -38,21 +37,13 @@ export const createAuth = (baseURL: string) =>
     },
     plugins: [expo()],
     baseURL,
-    trustedOrigins: [
-      "myapp://",
-      ...(process.env.NODE_ENV === "development"
-        ? ["exp://", "exp://**", "exp://192.168.*.*:*/**"]
-        : []),
-    ],
   });
 
 // Static export for CLI schema generation
 export const auth = createAuth("http://localhost:8787");
 ```
 
-Replace `myapp://` with the real Expo scheme from `packages/app/app.json`.
-
-This assumes `packages/api/src/database/schema.ts` exists and is the Drizzle schema entrypoint. Keep the generated Better Auth schema in `packages/api/src/database/auth-schema.ts` and re-export it from `schema.ts`.
+Keep the generated Better Auth schema in `packages/api/src/database/auth-schema.ts` and re-export it from `schema.ts`.
 
 ## 2. Generate Auth Schema
 
@@ -61,8 +52,6 @@ Run from `packages/api`:
 ```bash
 bun x @better-auth/cli@latest generate --config=./src/auth.ts --output=./src/database/auth-schema.ts -y
 ```
-
-If Drizzle is already wired the same way as the website template, keep `packages/api/src/database/schema.ts` as the source of truth and generate/apply migrations from there.
 
 ## 3. Middleware
 
@@ -217,12 +206,6 @@ await authClient.signUp.email({
   name,
 });
 ```
-
-Design requirement:
-
-- Do not ship barebones mobile forms.
-- Match the visual language of the app.
-- Handle keyboard overlap, loading, and error states explicitly.
 
 ## 8. Protected Requests From Expo
 
