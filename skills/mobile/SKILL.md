@@ -1,6 +1,6 @@
 ---
 name: mobile
-description: Use for any mobile app creation task — planning, designing, implementing screens, components, API routes, and delivering.
+description: Use for any mobile app creation task — planning, designing, implementing screens, components, API routes, and delivering. Includes authentication, email, and AI agent capabilities as optional modules.
 ---
 
 # Mobile App
@@ -8,7 +8,8 @@ description: Use for any mobile app creation task — planning, designing, imple
 ## Stack
 
 - **App**: Expo (React Native) — iOS, Android, Web
-- **API**: Cloudflare Workers with Hono + Vite
+- **API**: Cloudflare Workers with Hono + Vite (deployed separately)
+- **Database**: Cloudflare D1 (SQLite) via Drizzle ORM
 - **Data Fetching**: Hono RPC Client + React Query
 - **Styling**: React Native StyleSheet or NativeWind (Tailwind for RN)
 
@@ -20,22 +21,68 @@ description: Use for any mobile app creation task — planning, designing, imple
 
 Do not start implementation until the user approves or adjusts the plan.
 
+## Design Guidelines
+
+Document design direction in `design.md` inside the project root before writing UI code. Reference it throughout for consistency.
+
+- **Typography**: system fonts for performance, or load custom fonts via `expo-font`. Clear hierarchy through size/weight: title (28/700), heading (20/600), body (16/400), caption (14/400). Minimum 16px body, 14px captions. Consider Dynamic Type / font scaling accessibility.
+- **Color**: semantic colors — primary, secondary, background, surface, text, textSecondary, error. Support light and dark modes from the start using `useColorScheme()`. Ensure WCAG AA contrast. Define both palettes upfront.
+- **Spacing**: consistent scale (4, 8, 12, 16, 24, 32, 48). Generous padding in containers (16–24px horizontal). Adequate spacing between list items (12–16px). Safe area awareness for notches and home indicators.
+- **Touch Targets**: minimum 44x44pt (Apple HIG). Adequate spacing between interactive elements. Visual feedback on press (opacity, scale, or color change).
+- **Layout**: `SafeAreaView` for screen containers. Flexbox for all layouts. `ScrollView` or `FlatList` for scrollable content. `KeyboardAvoidingView` for forms. Respect platform conventions (iOS vs Android).
+- **Animation**: use `react-native-reanimated` for complex animations. Keep animations subtle and purposeful (200–300ms). Respect reduced motion preferences. Layout animations for list changes.
+- **Platform**: use `Platform.select()` for platform-specific styles (iOS shadows vs Android elevation). Test on both platforms regularly.
+- **Anti-patterns** (will feel broken): tiny touch targets (< 44pt), text smaller than 14px, no dark mode support, ignoring safe areas, web-like designs that don't feel native, overloaded screens with too much content, missing loading and error states.
+
+```ts
+// Example color palette
+const colors = {
+  light: {
+    primary: "#007AFF",
+    background: "#FFFFFF",
+    surface: "#F2F2F7",
+    text: "#000000",
+    textSecondary: "#8E8E93",
+  },
+  dark: {
+    primary: "#0A84FF",
+    background: "#000000",
+    surface: "#1C1C1E",
+    text: "#FFFFFF",
+    textSecondary: "#8E8E93",
+  },
+};
+
+// Example spacing scale
+const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 };
+
+// Example typography
+const typography = {
+  title: { fontSize: 28, fontWeight: "700" },
+  heading: { fontSize: 20, fontWeight: "600" },
+  body: { fontSize: 16, fontWeight: "400" },
+  caption: { fontSize: 14, fontWeight: "400", color: "#666" },
+};
+```
+
 ## Workflow
 
 1. Run preflight.
 2. Read this project's `README.md` for structure reference.
-3. Write `design.md` in the project root with the design direction from preflight (fonts, colors, spacing, style). See [design guidelines](./design.md). This file guides all UI code for consistency.
+3. Write `design.md` in the project root with the design direction from preflight (fonts, colors, spacing, style). This file guides all UI code for consistency.
 4. Load any relevant feature reference from `./references/` before implementing specialized capabilities.
-5. Build screens, components, API routes.
+5. Build screens, components, API routes, database schema.
 6. Verify with `bun build` to ensure no errors.
-7. Call `deliver` with `type: mobile-app`, project folder path at index 0.
+7. Test each implemented feature using `mb` (browser tool) against the Expo web preview. See [Testing](#testing).
+8. Call `deliver` with `type: mobile-app`, project folder path at index 0.
 
-## Feature References
+## Optional Capabilities
 
-Load these only when the task needs them:
+For optional capabilities, consult the matching reference **before** implementation:
 
-- [authentication.md](./references/authentication.md): Better Auth setup for Expo mobile clients with a Cloudflare Workers backend.
-- [email.md](./references/email.md): Transactional email from the Cloudflare Workers backend that serves the mobile app.
+- Authentication: [references/authentication.md](references/authentication.md)
+- Email: [references/email.md](references/email.md)
+- AI agent flows: [references/ai-agent.md](references/ai-agent.md)
 
 ## Project Structure
 
@@ -43,19 +90,31 @@ Load these only when the task needs them:
 packages/
 ├── app/                    # Expo mobile app
 │   ├── App.tsx             # Root component
-│   ├── app.json            # Expo config
+│   ├── app.json            # Expo config (scheme, icons, splash)
+│   ├── index.ts            # Entry point
 │   ├── assets/             # Icons, splash screens
 │   └── src/
 │       ├── screens/        # Screen components
 │       ├── components/     # Reusable components (providers.tsx)
 │       ├── navigation/     # Navigation config
 │       ├── hooks/          # Custom hooks
-│       ├── lib/            # API client, utilities
+│       ├── lib/            # API client, auth client, utilities
 │       └── constants/      # Colors, fonts, config
 │
-└── api/                    # Cloudflare Workers API
-    └── src/
-        └── index.ts        # Hono routes (exports AppType)
+└── api/                    # Cloudflare Workers API (deployed separately)
+    ├── src/
+    │   ├── index.ts        # Hono routes (exports AppType)
+    │   ├── auth.ts         # Better Auth config
+    │   ├── agent/          # AI agent config + tools
+    │   ├── routes/         # Route modules
+    │   ├── middleware/      # Auth middleware, etc.
+    │   └── database/
+    │       ├── schema.ts       # Drizzle schema (re-exports)
+    │       ├── auth-schema.ts  # Generated Better Auth tables
+    │       └── migrations/     # D1 migrations
+    ├── wrangler.json       # Cloudflare config
+    ├── vite.config.ts      # Vite + Cloudflare plugin
+    └── drizzle.config.ts   # Drizzle Kit config
 ```
 
 ## Development
@@ -67,18 +126,18 @@ bun dev --api        # API only (Vite on :8787)
 bun build            # Build both (verify no errors)
 ```
 
-## Preview & Testing
+## Preview
 
-The sandbox provides two ways for users to preview the app:
+The sandbox provides two ways to preview the app:
 
-1. **Web Preview**: Automatic browser preview at the sandbox URL
-2. **Expo Go**: Users can scan the QR code with the Expo Go app on their phone to test on a real device
-
-The Expo dev server provides a QR code for testing on physical devices with Expo Go.
+1. **Web Preview**: Automatic browser preview at the sandbox URL (Expo web export)
+2. **Expo Go**: Users scan the QR code with the Expo Go app on their phone
 
 ## API Integration
 
-The app uses Hono's type-safe RPC client with React Query for data fetching. The API package is installed as a workspace dependency for type sharing.
+The app uses Hono's type-safe RPC client with React Query for data fetching. The API package is installed as a workspace dependency (`@sandbox/api`) for type sharing.
+
+**Important**: The API is deployed separately from the app. The Expo client connects to the API via `EXPO_PUBLIC_API_URL` (defaults to `http://localhost:8787` in dev).
 
 ### API Routes (packages/api/src/index.ts)
 
@@ -89,7 +148,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 
 type Bindings = {
-  // Add bindings here (D1, R2, KV, etc.)
+  DB: D1Database;
 };
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -105,7 +164,6 @@ const app = new Hono<{ Bindings: Bindings }>()
     return c.json({ id: crypto.randomUUID(), name: body.name });
   });
 
-// Export type for RPC client
 export type AppType = typeof app;
 export default app;
 ```
@@ -130,7 +188,7 @@ import type { ReactNode } from "react";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60, // 1 minute
+      staleTime: 1000 * 60,
       retry: 2,
     },
   },
@@ -154,7 +212,6 @@ import { api } from "../lib/api";
 function ItemList() {
   const queryClient = useQueryClient();
 
-  // Fetch items
   const { data, isLoading } = useQuery({
     queryKey: ["items"],
     queryFn: async () => {
@@ -163,7 +220,6 @@ function ItemList() {
     },
   });
 
-  // Create item
   const createItem = useMutation({
     mutationFn: async (name: string) => {
       const res = await api.api.items.$post({ json: { name } });
@@ -183,22 +239,6 @@ function ItemList() {
       ))}
       <Button title="Add Item" onPress={() => createItem.mutate("New Item")} />
     </View>
-  );
-}
-```
-
-### App Root (App.tsx)
-
-Wrap your app with Providers:
-
-```tsx
-import { Providers } from "./src/components/providers";
-
-export default function App() {
-  return (
-    <Providers>
-      <HomeScreen />
-    </Providers>
   );
 }
 ```
@@ -244,11 +284,9 @@ Create `.env` in `packages/app`:
 EXPO_PUBLIC_API_URL=http://localhost:8787
 ```
 
-For production, set to your deployed API URL.
+For production, set this to your deployed API URL.
 
-## Design Guidelines
-
-See [design.md](./design.md) for full design guidelines. Write a `design.md` in the project after setup to document fonts, colors, spacing, and style before writing UI code.
+The API uses Cloudflare Workers environment bindings configured in `wrangler.json` (D1, secrets, etc.).
 
 ## Deployment
 
@@ -261,7 +299,7 @@ bun run deploy
 
 ### App (EAS Build)
 
-For production app store builds, users can run EAS Build from their local machine or CI:
+For production app store builds:
 
 ```bash
 cd packages/app
@@ -271,8 +309,34 @@ eas build --platform android
 
 ## Testing
 
-Before delivering, verify:
-1. `bun build` passes with no errors
-2. API endpoints respond correctly
-3. React Query fetches data properly
-4. No console errors or warnings
+Before delivering, **verify every implemented feature actually works**. Do not deliver untested code.
+
+### 1. Build Validation
+
+Run `bun build` from the project root. Fix all errors before proceeding.
+
+### 2. API Smoke Test
+
+Start the dev servers with `bun dev`. Use `curl` or the browser tool to hit API endpoints directly:
+
+```bash
+curl http://localhost:8787/api/health
+```
+
+### 3. Browser-Based Flow Testing
+
+Use the `mb` (mini-browser) tool to exercise the Expo web preview for every user-facing feature:
+
+- **Authentication**: Open the web preview, navigate to sign-up, create an account, sign out, sign back in. Verify protected screens redirect unauthenticated users. Verify session persists across navigation.
+- **Email**: Trigger the flow that sends email (e.g. contact form, welcome on sign-up). Verify the API responds successfully and the UI shows the correct success/error state.
+- **AI Agent**: Open the chat screen, send a prompt, verify streaming text appears. If tools are configured, trigger a tool call and verify the result renders.
+- **General UI**: Navigate between screens. Verify loading states, error states, empty states. Check no console errors.
+
+### 4. Native-Only Behaviors
+
+Some features (push notifications, secure storage, biometrics) cannot be tested via web preview. For these:
+- Verify the code compiles (`bun build`)
+- Call out explicitly in your delivery notes which features need on-device testing
+- Recommend the user test via Expo Go on a physical device
+
+**Do not mark a feature as done until you have tested it.**
